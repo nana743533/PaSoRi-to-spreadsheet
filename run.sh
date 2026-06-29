@@ -1,5 +1,10 @@
 #!/bin/bash
-# FeliCa 出席管理システム 実行スクリプト
+# 出席管理システム 実行スクリプト
 cd "$(dirname "$0")"
-export DYLD_LIBRARY_PATH=/opt/homebrew/opt/expat/lib
+
+# .env ファイルがあれば読み込む
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
+
 exec ./venv/bin/python3 attendance.py "$@"

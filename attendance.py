@@ -18,8 +18,15 @@ from smartcard.System import readers
 from smartcard.util import toHexString
 
 # ── 設定 ─────────────────────────────────────────────────
-SPREADSHEET_KEY = "your-spreadsheet-key"
-CREDENTIALS_FILE = "credentials/your-credentials-file.json"
+# 環境変数から読み取り。未設定時はデフォルト値を使用。
+SPREADSHEET_KEY = os.environ.get(
+    "SPREADSHEET_KEY",
+    "your-spreadsheet-key"
+)
+CREDENTIALS_FILE = os.environ.get(
+    "CREDENTIALS_FILE",
+    "credentials/your-credentials-file.json"
+)
 READER_NAME = "PaSoRi"  # 部分一致で探す
 POLL_INTERVAL = 0.5     # ポーリング間隔（秒）
 # ────────────────────────────────────────────────────────

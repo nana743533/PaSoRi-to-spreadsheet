@@ -4,6 +4,9 @@ venv/
 # 認証情報（絶対にコミットしない）
 credentials/
 
+# 環境変数ファイル
+.env
+
 # macOS
 .DS_Store
 
