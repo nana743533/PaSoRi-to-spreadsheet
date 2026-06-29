@@ -1,0 +1,12 @@
+# 仮想環境
+venv/
+
+# 認証情報（絶対にコミットしない）
+credentials/
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
