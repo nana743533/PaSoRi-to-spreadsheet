@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>出席管理システム</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+            background: #f5f5f5;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 420px;
+            width: 90%;
+        }
+        h1 { font-size: 1.5rem; margin-bottom: 8px; color: #333; }
+        .subtitle { color: #888; font-size: 0.9rem; margin-bottom: 32px; }
+        .buttons { display: flex; gap: 16px; justify-content: center; margin-bottom: 24px; }
+        button {
+            flex: 1;
+            padding: 24px 16px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        button:active { transform: scale(0.96); }
+        button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .btn-start { background: #4CAF50; }
+        .btn-start:hover:not(:disabled) { background: #43A047; }
+        .btn-end { background: #FF9800; }
+        .btn-end:hover:not(:disabled) { background: #F57C00; }
+        .status {
+            min-height: 60px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; color: #555;
+        }
+        .status.waiting { color: #2196F3; }
+        .status.success { color: #4CAF50; }
+        .status.error { color: #F44336; }
+        .result {
+            margin-top: 12px; padding: 12px;
+            background: #f9f9f9; border-radius: 8px;
+            font-size: 0.95rem; color: #333;
+            display: none;
+        }
+        .result.show { display: block; }
+        .result .name { font-size: 1.2rem; font-weight: bold; }
+        .result .time { color: #888; font-size: 0.85rem; }
+        .history {
+            margin-top: 24px; text-align: left;
+            max-height: 160px; overflow-y: auto;
+            border-top: 1px solid #eee; padding-top: 12px;
+        }
+        .history h3 { font-size: 0.85rem; color: #999; margin-bottom: 8px; }
+        .history-item { font-size: 0.85rem; padding: 4px 0; color: #666; }
+        .history-item span { color: #333; font-weight: 500; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 出席管理</h1>
+        <p class="subtitle">ボタンを押してからカードをタッチ</p>
+
+        <div class="buttons">
+            <button class="btn-start" onclick="readCard('start')">出 席</button>
+            <button class="btn-end" onclick="readCard('end')">退 勤</button>
+        </div>
+
+        <div class="status" id="status">ボタンを選んでください</div>
+
+        <div class="result" id="result">
+            <div class="name" id="result-name"></div>
+            <div class="time" id="result-time"></div>
+        </div>
+
+        <div class="history" id="history">
+            <h3>履歴</h3>
+        </div>
+    </div>
+
+    <script>
+        const statusEl = document.getElementById('status');
+        const resultEl = document.getElementById('result');
+        const historyEl = document.getElementById('history');
+        const buttons = document.querySelectorAll('button');
+
+        function addHistory(name, type, time) {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            const icon = type === '出席' ? '✅' : '🏠';
+            div.innerHTML = `${icon} <span>${name}</span> ${type} ${time}`;
+            historyEl.insertBefore(div, historyEl.children[1] || historyEl.firstChild);
+        }
+
+        async function readCard(type) {
+            const typeLabel = type === 'start' ? '出席' : '退勤';
+
+            buttons.forEach(b => b.disabled = true);
+            statusEl.textContent = `⏳ ${typeLabel}モード：カードをタッチしてください...`;
+            statusEl.className = 'status waiting';
+            resultEl.classList.remove('show');
+
+            try {
+                const res = await fetch('/api/read', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: type })
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    statusEl.textContent = '✅ 打刻完了！';
+                    statusEl.className = 'status success';
+                    resultEl.classList.add('show');
+                    document.getElementById('result-name').textContent = data.name + ' さん';
+                    document.getElementById('result-time').textContent = `${data.type} ${data.time}`;
+                    addHistory(data.name, data.type, data.time);
+                } else {
+                    statusEl.textContent = '❌ ' + data.error;
+                    statusEl.className = 'status error';
+                }
+            } catch (e) {
+                statusEl.textContent = '❌ 通信エラー: ' + e.message;
+                statusEl.className = 'status error';
+            }
+
+            buttons.forEach(b => b.disabled = false);
+        }
+    </script>
+</body>
+</html>
