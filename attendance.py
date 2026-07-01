@@ -6,6 +6,7 @@ Google スプレッドシートに記録します。
 
 通信方式: PC/SC (pyscard)
 """
+import os
 import sys
 import time
 from datetime import datetime
@@ -16,6 +17,22 @@ from google.oauth2.service_account import Credentials
 from smartcard.CardMonitoring import CardMonitor, CardObserver
 from smartcard.System import readers
 from smartcard.util import toHexString
+
+# ── .env 読み込み ──────────────────────────────────────
+def _load_dotenv(path=None):
+    """簡易 .env ローダー（python-dotenv 不要）"""
+    if path is None:
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if os.path.exists(path):
+        with open(path) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, _, value = line.partition("=")
+                    if key.strip() not in os.environ:
+                        os.environ[key.strip()] = value.strip()
+
+_load_dotenv()
 
 # ── 設定 ─────────────────────────────────────────────────
 # 環境変数から読み取り。未設定時はデフォルト値を使用。
