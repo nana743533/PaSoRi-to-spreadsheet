@@ -13,59 +13,84 @@
             min-height: 100vh;
         }
         .container {
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
+            background: white; border-radius: 16px; padding: 40px;
             box-shadow: 0 4px 24px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 420px;
-            width: 90%;
+            text-align: center; max-width: 440px; width: 90%;
         }
-        h1 { font-size: 1.5rem; margin-bottom: 8px; color: #333; }
-        .subtitle { color: #888; font-size: 0.9rem; margin-bottom: 32px; }
-        .buttons { display: flex; gap: 16px; justify-content: center; margin-bottom: 24px; }
-        button {
-            flex: 1;
-            padding: 24px 16px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            color: white;
+        h1 { font-size: 1.5rem; margin-bottom: 4px; color: #333; }
+        .subtitle { color: #888; font-size: 0.9rem; margin-bottom: 24px; }
+        .mode-buttons { display: flex; gap: 10px; justify-content: center; margin-bottom: 16px; }
+        .mode-buttons button {
+            flex: 1; padding: 20px 8px; font-size: 1.1rem; font-weight: bold;
+            border: none; border-radius: 10px; cursor: pointer; color: white;
             transition: transform 0.1s, opacity 0.2s;
         }
-        button:active { transform: scale(0.96); }
-        button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .mode-buttons button:active { transform: scale(0.96); }
+        .mode-buttons button:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
         .btn-start { background: #4CAF50; }
-        .btn-start:hover:not(:disabled) { background: #43A047; }
         .btn-end { background: #FF9800; }
-        .btn-end:hover:not(:disabled) { background: #F57C00; }
+        .btn-check { background: #607D8B; }
+
+        .btn-cancel {
+            display: none;
+            width: 100%; padding: 12px; font-size: 1rem;
+            border: 2px solid #F44336; color: #F44336;
+            background: white; border-radius: 8px;
+            cursor: pointer; margin-bottom: 16px;
+            transition: background 0.2s;
+        }
+        .btn-cancel:hover { background: #FFF5F5; }
+        .btn-cancel.visible { display: block; }
+
         .status {
-            min-height: 60px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1rem; color: #555;
+            min-height: 50px; display: flex; align-items: center;
+            justify-content: center; font-size: 1rem; color: #555;
+            margin-bottom: 8px;
         }
         .status.waiting { color: #2196F3; }
         .status.success { color: #4CAF50; }
         .status.error { color: #F44336; }
+
         .result {
-            margin-top: 12px; padding: 12px;
-            background: #f9f9f9; border-radius: 8px;
-            font-size: 0.95rem; color: #333;
-            display: none;
+            padding: 12px; background: #f9f9f9; border-radius: 8px;
+            font-size: 0.95rem; color: #333; display: none; margin-bottom: 16px;
         }
         .result.show { display: block; }
-        .result .name { font-size: 1.2rem; font-weight: bold; }
-        .result .time { color: #888; font-size: 0.85rem; }
-        .history {
-            margin-top: 24px; text-align: left;
-            max-height: 160px; overflow-y: auto;
-            border-top: 1px solid #eee; padding-top: 12px;
+        .result .name { font-size: 1.3rem; font-weight: bold; }
+        .result .detail { color: #888; font-size: 0.85rem; }
+
+        .btn-history {
+            width: 100%; padding: 10px; font-size: 0.9rem;
+            border: 1px solid #ddd; background: white; border-radius: 8px;
+            cursor: pointer; color: #666;
         }
-        .history h3 { font-size: 0.85rem; color: #999; margin-bottom: 8px; }
-        .history-item { font-size: 0.85rem; padding: 4px 0; color: #666; }
-        .history-item span { color: #333; font-weight: 500; }
+
+        /* 登録モーダル */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.4);
+            justify-content: center; align-items: center; z-index: 100;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: white; border-radius: 12px; padding: 28px;
+            text-align: center; max-width: 360px; width: 90%;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .modal-content h2 { font-size: 1.2rem; margin-bottom: 8px; }
+        .modal-content .uid { font-size: 0.85rem; color: #888; margin-bottom: 16px; word-break: break-all; }
+        .modal-content input {
+            width: 100%; padding: 10px; font-size: 1rem;
+            border: 1px solid #ddd; border-radius: 8px;
+            text-align: center; margin-bottom: 16px;
+        }
+        .modal-buttons { display: flex; gap: 10px; }
+        .modal-buttons button {
+            flex: 1; padding: 10px; font-size: 0.95rem;
+            border: none; border-radius: 8px; cursor: pointer;
+        }
+        .modal-buttons .btn-register { background: #4CAF50; color: white; }
+        .modal-buttons .btn-close { background: #eee; color: #666; }
     </style>
 </head>
 <body>
@@ -73,42 +98,56 @@
         <h1>📱 出席管理</h1>
         <p class="subtitle">ボタンを押してからカードをタッチ</p>
 
-        <div class="buttons">
-            <button class="btn-start" onclick="readCard('start')">出 席</button>
-            <button class="btn-end" onclick="readCard('end')">退 勤</button>
+        <button class="btn-cancel" id="cancelBtn" onclick="doCancel()">✕ キャンセル</button>
+
+        <div class="mode-buttons">
+            <button class="btn-start" id="btnStart" onclick="doRead('start')">出 席</button>
+            <button class="btn-end" id="btnEnd" onclick="doRead('end')">退 勤</button>
+            <button class="btn-check" id="btnCheck" onclick="doRead('check')">UID確認</button>
         </div>
 
         <div class="status" id="status">ボタンを選んでください</div>
 
         <div class="result" id="result">
             <div class="name" id="result-name"></div>
-            <div class="time" id="result-time"></div>
+            <div class="detail" id="result-detail"></div>
         </div>
 
-        <div class="history" id="history">
-            <h3>履歴</h3>
+        <button class="btn-history" onclick="location.href='/history'">📋 履歴を見る</button>
+    </div>
+
+    <!-- 登録モーダル -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <h2>🆕 カード登録</h2>
+            <p class="uid" id="modal-uid"></p>
+            <input type="text" id="modal-name" placeholder="氏名を入力" autocomplete="off">
+            <div class="modal-buttons">
+                <button class="btn-close" onclick="closeModal()">閉じる</button>
+                <button class="btn-register" onclick="doRegister()">登録する</button>
+            </div>
         </div>
     </div>
 
     <script>
         const statusEl = document.getElementById('status');
         const resultEl = document.getElementById('result');
-        const historyEl = document.getElementById('history');
-        const buttons = document.querySelectorAll('button');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const modal = document.getElementById('registerModal');
+        const buttons = [document.getElementById('btnStart'),
+                         document.getElementById('btnEnd'),
+                         document.getElementById('btnCheck')];
+        let pendingUid = null;
 
-        function addHistory(name, type, time) {
-            const div = document.createElement('div');
-            div.className = 'history-item';
-            const icon = type === '出席' ? '✅' : '🏠';
-            div.innerHTML = `${icon} <span>${name}</span> ${type} ${time}`;
-            historyEl.insertBefore(div, historyEl.children[1] || historyEl.firstChild);
+        function setUI(active) {
+            buttons.forEach(b => b.disabled = active);
+            cancelBtn.classList.toggle('visible', active);
         }
 
-        async function readCard(type) {
-            const typeLabel = type === 'start' ? '出席' : '退勤';
-
-            buttons.forEach(b => b.disabled = true);
-            statusEl.textContent = `⏳ ${typeLabel}モード：カードをタッチしてください...`;
+        async function doRead(type) {
+            const labels = { start: '出席', end: '退勤', check: 'UID確認' };
+            setUI(true);
+            statusEl.textContent = `⏳ ${labels[type]}モード：カードをタッチ...`;
             statusEl.className = 'status waiting';
             resultEl.classList.remove('show');
 
@@ -116,27 +155,91 @@
                 const res = await fetch('/api/read', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: type })
+                    body: JSON.stringify({ type })
                 });
                 const data = await res.json();
 
                 if (data.ok) {
-                    statusEl.textContent = '✅ 打刻完了！';
-                    statusEl.className = 'status success';
-                    resultEl.classList.add('show');
-                    document.getElementById('result-name').textContent = data.name + ' さん';
-                    document.getElementById('result-time').textContent = `${data.type} ${data.time}`;
-                    addHistory(data.name, data.type, data.time);
+                    if (type === 'check') {
+                        if (data.registered) {
+                            statusEl.textContent = `✅ 登録済み: ${data.name} さん`;
+                            statusEl.className = 'status success';
+                        } else {
+                            statusEl.textContent = `ℹ 未登録のカードです`;
+                            statusEl.className = 'status waiting';
+                            pendingUid = data.uid;
+                            document.getElementById('modal-uid').textContent =
+                                `UID: ${data.uid}`;
+                            document.getElementById('modal-name').value = '';
+                            modal.classList.add('show');
+                        }
+                    } else {
+                        statusEl.textContent = '✅ 打刻完了！';
+                        statusEl.className = 'status success';
+                        resultEl.classList.add('show');
+                        document.getElementById('result-name').textContent =
+                            data.name + ' さん';
+                        document.getElementById('result-detail').textContent =
+                            `${data.type} ${data.time}`;
+                    }
                 } else {
-                    statusEl.textContent = '❌ ' + data.error;
-                    statusEl.className = 'status error';
+                    if (data.unregistered) {
+                        statusEl.textContent = '⚠ 未登録のカードです';
+                        statusEl.className = 'status error';
+                        pendingUid = data.uid;
+                        document.getElementById('modal-uid').textContent =
+                            `UID: ${data.uid}`;
+                        document.getElementById('modal-name').value = '';
+                        modal.classList.add('show');
+                    } else if (data.cancelled) {
+                        statusEl.textContent = '🚫 キャンセルしました';
+                        statusEl.className = 'status waiting';
+                    } else {
+                        statusEl.textContent = '❌ ' + data.error;
+                        statusEl.className = 'status error';
+                    }
                 }
             } catch (e) {
-                statusEl.textContent = '❌ 通信エラー: ' + e.message;
+                statusEl.textContent = '❌ 通信エラー';
                 statusEl.className = 'status error';
             }
 
-            buttons.forEach(b => b.disabled = false);
+            setUI(false);
+        }
+
+        async function doCancel() {
+            try {
+                await fetch('/api/cancel', { method: 'POST' });
+                statusEl.textContent = '🚫 キャンセル中...';
+            } catch (e) {}
+        }
+
+        function closeModal() {
+            modal.classList.remove('show');
+            pendingUid = null;
+        }
+
+        async function doRegister() {
+            const name = document.getElementById('modal-name').value.trim();
+            if (!name) { alert('氏名を入力してください'); return; }
+
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ uid: pendingUid, name })
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    statusEl.textContent = `✅ ${data.name} さんを登録しました`;
+                    statusEl.className = 'status success';
+                    closeModal();
+                } else {
+                    alert('登録失敗: ' + data.error);
+                }
+            } catch (e) {
+                alert('通信エラー');
+            }
         }
     </script>
 </body>
