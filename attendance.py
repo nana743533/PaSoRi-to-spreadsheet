@@ -24,7 +24,7 @@ def _load_dotenv(path=None):
     if path is None:
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
     if os.path.exists(path):
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:

@@ -33,4 +33,6 @@ echo   1. Edit .env
 echo   2. Put service-account JSON in credentials\
 echo   3. Install NFC Port Software ^(Windows driver^) if not yet
 echo   4. Run windows\check_reader.bat then windows\run_web.bat
+echo.
+pause
 endlocal
