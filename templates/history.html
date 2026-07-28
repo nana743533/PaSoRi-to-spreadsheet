@@ -76,10 +76,13 @@
 
                 data.records.forEach(r => {
                     const tr = document.createElement('tr');
+                    const date = r['日時'] || r['日付'] || '';
+                    const name = r['名前'] || r['氏名'] || '';
+                    const time = r['開始時間'] || r['開始時刻'] || '-';
                     tr.innerHTML = `
-                        <td>${r['日付'] || ''}</td>
-                        <td>${r['氏名'] || ''}</td>
-                        <td>${r['開始時刻'] || '-'}</td>
+                        <td>${date}</td>
+                        <td>${name}</td>
+                        <td>${time}</td>
                     `;
                     tbody.appendChild(tr);
                 });
