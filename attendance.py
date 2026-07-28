@@ -105,15 +105,21 @@ def load_members(client):
 
 
 def record_attendance(client, member):
-    """出席シートに出席時刻のみを新規行として記録する"""
+    """出席シートに出席時刻のみを新規行として記録する
+
+    名簿の「直近の出席日」数式が動くよう、日付・時刻は日付/時刻セルとして書く。
+    """
     ws = client.open_by_key(SPREADSHEET_KEY).worksheet("出席")
     now = datetime.now()
     name = member.get("氏名", "")
     date_str = now.strftime("%Y/%m/%d")
     time_str = now.strftime("%H:%M")
 
-    # A:日付 B:氏名 C:開始時刻（出席） D:終了時刻は使わない
-    ws.append_row([date_str, name, time_str, ""])
+    # A:日時 B:名前 C:開始時間 D:終了時間（未使用）
+    ws.append_row(
+        [date_str, name, time_str, ""],
+        value_input_option="USER_ENTERED",
+    )
     print(f"  ✅ {name} さん  → 出席 {time_str}")
 
 

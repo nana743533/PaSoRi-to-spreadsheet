@@ -94,14 +94,21 @@ def load_all_members(client):
 
 
 def record(client, member):
-    """出席時刻のみを新規行として記録する"""
+    """出席時刻のみを新規行として記録する
+
+    名簿の「直近の出席日」は出席シートを参照する数式なので、
+    日付・時刻は USER_ENTERED で本物の日付/時刻セルとして書く。
+    """
     ws = client.open_by_key(SPREADSHEET_KEY).worksheet("出席")
     now = datetime.now()
     name = member.get("氏名", "")
     date_str = now.strftime("%Y/%m/%d")
     time_str = now.strftime("%H:%M")
-    # A:日付 B:氏名 C:開始時刻（出席） D:終了時刻は使わない
-    ws.append_row([date_str, name, time_str, ""])
+    # A:日時 B:名前 C:開始時間 D:終了時間（未使用）
+    ws.append_row(
+        [date_str, name, time_str, ""],
+        value_input_option="USER_ENTERED",
+    )
 
 
 def register_card_to_sheet(client, card_id, name):
