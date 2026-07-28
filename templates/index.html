@@ -28,7 +28,6 @@
         .mode-buttons button:active { transform: scale(0.96); }
         .mode-buttons button:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
         .btn-start { background: #4CAF50; }
-        .btn-end { background: #FF9800; }
         .btn-check { background: #607D8B; }
 
         .btn-cancel {
@@ -102,7 +101,6 @@
 
         <div class="mode-buttons">
             <button class="btn-start" id="btnStart" onclick="doRead('start')">出 席</button>
-            <button class="btn-end" id="btnEnd" onclick="doRead('end')">退 勤</button>
             <button class="btn-check" id="btnCheck" onclick="doRead('check')">UID確認</button>
         </div>
 
@@ -135,7 +133,6 @@
         const cancelBtn = document.getElementById('cancelBtn');
         const modal = document.getElementById('registerModal');
         const buttons = [document.getElementById('btnStart'),
-                         document.getElementById('btnEnd'),
                          document.getElementById('btnCheck')];
         let pendingUid = null;
 
@@ -145,7 +142,7 @@
         }
 
         async function doRead(type) {
-            const labels = { start: '出席', end: '退勤', check: 'UID確認' };
+            const labels = { start: '出席', check: 'UID確認' };
             setUI(true);
             statusEl.textContent = `⏳ ${labels[type]}モード：カードをタッチ...`;
             statusEl.className = 'status waiting';

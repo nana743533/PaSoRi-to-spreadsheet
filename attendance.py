@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 出席管理システム
-PaSoRi RC-S300 + NTAG215 カードで出席・退勤を打刻し、
+PaSoRi RC-S300 + NTAG215 カードで出席を打刻し、
 Google スプレッドシートに記録します。
 
 通信方式: PC/SC (pyscard)
@@ -105,29 +105,14 @@ def load_members(client):
 
 
 def record_attendance(client, member):
-    """出席シートに打刻
-
-    同日・同人物の未完了レコード（終了時刻が空）があれば終了時刻を更新。
-    なければ新規行として開始時刻を記録。
-    """
+    """出席シートに出席時刻のみを新規行として記録する"""
     ws = client.open_by_key(SPREADSHEET_KEY).worksheet("出席")
     now = datetime.now()
     name = member.get("氏名", "")
     date_str = now.strftime("%Y/%m/%d")
     time_str = now.strftime("%H:%M")
 
-    # 既存レコードをチェック
-    records = ws.get_all_records()
-    for i, r in enumerate(records):
-        if (str(r.get("日付", "")).strip() == date_str and
-            str(r.get("氏名", "")).strip() == name and
-            str(r.get("終了時刻", "")).strip() == ""):
-            # 退勤打刻
-            ws.update_cell(i + 2, 4, time_str)  # D列: 終了時刻
-            print(f"  🏠 {name} さん  → 退勤 {time_str}")
-            return
-
-    # 出席打刻（新規行）
+    # A:日付 B:氏名 C:開始時刻（出席） D:終了時刻は使わない
     ws.append_row([date_str, name, time_str, ""])
     print(f"  ✅ {name} さん  → 出席 {time_str}")
 

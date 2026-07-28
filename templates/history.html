@@ -51,7 +51,7 @@
         <table id="table" style="display:none">
             <thead>
                 <tr>
-                    <th>日付</th><th>氏名</th><th>開始</th><th>終了</th>
+                    <th>日付</th><th>氏名</th><th>出席</th>
                 </tr>
             </thead>
             <tbody id="tbody"></tbody>
@@ -80,7 +80,6 @@
                         <td>${r['日付'] || ''}</td>
                         <td>${r['氏名'] || ''}</td>
                         <td>${r['開始時刻'] || '-'}</td>
-                        <td>${r['終了時刻'] || '-'}</td>
                     `;
                     tbody.appendChild(tr);
                 });

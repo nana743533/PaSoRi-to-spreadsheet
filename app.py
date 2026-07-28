@@ -93,16 +93,15 @@ def load_all_members(client):
             for r in records if r.get("カードID", "")}
 
 
-def record(client, member, record_type):
-    """record_type: 'start' or 'end'"""
+def record(client, member):
+    """出席時刻のみを新規行として記録する"""
     ws = client.open_by_key(SPREADSHEET_KEY).worksheet("出席")
     now = datetime.now()
     name = member.get("氏名", "")
     date_str = now.strftime("%Y/%m/%d")
     time_str = now.strftime("%H:%M")
-    ws.append_row([date_str, name,
-                   time_str if record_type == "start" else "",
-                   time_str if record_type == "end" else ""])
+    # A:日付 B:氏名 C:開始時刻（出席） D:終了時刻は使わない
+    ws.append_row([date_str, name, time_str, ""])
 
 
 def register_card_to_sheet(client, card_id, name):
@@ -141,9 +140,9 @@ def api_cancel():
 @app.route("/api/read", methods=["POST"])
 def api_read():
     data = request.get_json()
-    record_type = data.get("type")  # "start" | "end" | "check"
+    record_type = data.get("type")  # "start" | "check"
 
-    if record_type not in ("start", "end", "check"):
+    if record_type not in ("start", "check"):
         return jsonify({"ok": False, "error": "type が不正です"}), 400
 
     reader = find_pasori()
@@ -172,7 +171,7 @@ def api_read():
         else:
             return jsonify({"ok": True, "uid": uid, "registered": False})
 
-    # 出席/退勤モード
+    # 出席モード（出席時刻のみ記録）
     try:
         client = get_sheets_client()
         member = find_member(client, uid)
@@ -184,14 +183,13 @@ def api_read():
                         "error": "未登録のカードです"}), 404
 
     try:
-        record(client, member, record_type)
+        record(client, member)
     except Exception as e:
         return jsonify({"ok": False, "error": f"打刻エラー: {e}"}), 500
 
-    label = {"start": "出席", "end": "退勤"}[record_type]
     now = datetime.now().strftime("%H:%M")
     return jsonify({"ok": True, "uid": uid, "name": member.get("氏名", ""),
-                    "type": label, "time": now})
+                    "type": "出席", "time": now})
 
 
 @app.route("/api/register", methods=["POST"])
