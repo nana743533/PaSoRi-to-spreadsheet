@@ -73,24 +73,40 @@ def read_card_uid(reader, timeout=CARD_TIMEOUT):
     return None
 
 
+# 名簿: A番号 B氏名 … J直近の出席日 / KカードID（アプリが追加）
+MEIBO_NAME_COL = 2       # B
+MEIBO_CARD_ID_COL = 11   # K
+CARD_ID_HEADER = "カードID"
+
+
 def get_sheets_client():
     creds = Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=SCOPE)
     return gspread.authorize(creds)
 
 
+def ensure_card_id_column(ws):
+    """名簿にカードID列（K列）が無ければヘッダーを追加する。"""
+    header = ws.row_values(1)
+    if len(header) >= MEIBO_CARD_ID_COL and header[MEIBO_CARD_ID_COL - 1] == CARD_ID_HEADER:
+        return
+    ws.update_cell(1, MEIBO_CARD_ID_COL, CARD_ID_HEADER)
+
+
 def find_member(client, card_id):
     ws = client.open_by_key(SPREADSHEET_KEY).worksheet("名簿")
+    ensure_card_id_column(ws)
     for r in ws.get_all_records():
-        if str(r.get("カードID", "")).strip() == card_id:
+        if str(r.get(CARD_ID_HEADER, "")).strip() == card_id:
             return r
     return None
 
 
 def load_all_members(client):
     ws = client.open_by_key(SPREADSHEET_KEY).worksheet("名簿")
+    ensure_card_id_column(ws)
     records = ws.get_all_records()
-    return {str(r.get("カードID", "")).strip(): r
-            for r in records if r.get("カードID", "")}
+    return {str(r.get(CARD_ID_HEADER, "")).strip(): r
+            for r in records if r.get(CARD_ID_HEADER, "")}
 
 
 def record(client, member):
@@ -104,7 +120,7 @@ def record(client, member):
     name = member.get("氏名", "")
     date_str = now.strftime("%Y/%m/%d")
     time_str = now.strftime("%H:%M")
-    # A:日時 B:名前 C:開始時間 D:終了時間（未使用）
+    # A:日付 B:名前 C:開始時間 D:終了時間（未使用）
     ws.append_row(
         [date_str, name, time_str, ""],
         value_input_option="USER_ENTERED",
@@ -112,27 +128,36 @@ def record(client, member):
 
 
 def register_card_to_sheet(client, card_id, name):
-    """カードUID を名簿に登録"""
+    """カードUID を名簿に登録（K列: カードID）"""
     ws = client.open_by_key(SPREADSHEET_KEY).worksheet("名簿")
+    ensure_card_id_column(ws)
     records = ws.get_all_records()
 
-    # 既存の氏名を検索
     for i, r in enumerate(records):
         if r.get("氏名", "") == name:
-            ws.update_cell(i + 2, 10, card_id)  # J列: カードID
+            ws.update_cell(i + 2, MEIBO_CARD_ID_COL, card_id)
             return True
 
-    # 新規追加
-    ws.update_cell(len(records) + 2, 2, name)
-    ws.update_cell(len(records) + 2, 10, card_id)
+    row = len(records) + 2
+    ws.update_cell(row, MEIBO_NAME_COL, name)
+    ws.update_cell(row, MEIBO_CARD_ID_COL, card_id)
     return True
 
 
 def get_history(client, limit=50):
-    """出席シートの履歴を取得"""
+    """出席シートの履歴を取得（A日付 B名前 C開始時間）"""
     ws = client.open_by_key(SPREADSHEET_KEY).worksheet("出席")
-    records = ws.get_all_records()
-    records.reverse()  # 新しい順
+    rows = ws.get_all_values()
+    records = []
+    for row in rows[1:]:
+        if len(row) < 2 or not (row[0] or row[1]):
+            continue
+        records.append({
+            "日時": row[0],
+            "名前": row[1] if len(row) > 1 else "",
+            "開始時間": row[2] if len(row) > 2 else "",
+        })
+    records.reverse()
     return records[:limit]
 
 

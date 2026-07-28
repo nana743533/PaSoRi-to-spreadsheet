@@ -92,13 +92,28 @@ def get_sheets_client():
     return gspread.authorize(creds)
 
 
+# 名簿: A番号 B氏名 … J直近の出席日 / KカードID（アプリが追加）
+MEIBO_NAME_COL = 2       # B
+MEIBO_CARD_ID_COL = 11   # K
+CARD_ID_HEADER = "カードID"
+
+
+def ensure_card_id_column(ws):
+    """名簿にカードID列（K列）が無ければヘッダーを追加する。"""
+    header = ws.row_values(1)
+    if len(header) >= MEIBO_CARD_ID_COL and header[MEIBO_CARD_ID_COL - 1] == CARD_ID_HEADER:
+        return
+    ws.update_cell(1, MEIBO_CARD_ID_COL, CARD_ID_HEADER)
+
+
 def load_members(client):
     """名簿シートからメンバー情報を読み込む"""
     ws = client.open_by_key(SPREADSHEET_KEY).worksheet("名簿")
+    ensure_card_id_column(ws)
     records = ws.get_all_records()
     members = {}
     for r in records:
-        card_id = str(r.get("カードID", "") or "").strip()
+        card_id = str(r.get(CARD_ID_HEADER, "") or "").strip()
         if card_id:
             members[card_id] = r
     return members
@@ -115,7 +130,7 @@ def record_attendance(client, member):
     date_str = now.strftime("%Y/%m/%d")
     time_str = now.strftime("%H:%M")
 
-    # A:日時 B:名前 C:開始時間 D:終了時間（未使用）
+    # A:日付 B:名前 C:開始時間 D:終了時間（未使用）
     ws.append_row(
         [date_str, name, time_str, ""],
         value_input_option="USER_ENTERED",
@@ -126,6 +141,7 @@ def record_attendance(client, member):
 def register_card(client, card_id):
     """未登録カードを名簿に紐付け"""
     ws = client.open_by_key(SPREADSHEET_KEY).worksheet("名簿")
+    ensure_card_id_column(ws)
     records = ws.get_all_records()
     print(f"\nカードID: {card_id}")
     name = input("氏名を入力してください: ").strip()
@@ -135,15 +151,16 @@ def register_card(client, card_id):
 
     for i, r in enumerate(records):
         if r.get("氏名", "") == name:
-            ws.update_cell(i + 2, 10, card_id)  # J列: カードID
+            ws.update_cell(i + 2, MEIBO_CARD_ID_COL, card_id)
             print(f"  ✅ {name} さんにカードを紐付けました")
             return
 
     print(f"  ℹ {name} さんは名簿に未登録です")
     yn = input("名簿に新規追加しますか？ (y/n): ").strip().lower()
     if yn == "y":
-        ws.update_cell(len(records) + 2, 2, name)
-        ws.update_cell(len(records) + 2, 10, card_id)
+        row = len(records) + 2
+        ws.update_cell(row, MEIBO_NAME_COL, name)
+        ws.update_cell(row, MEIBO_CARD_ID_COL, card_id)
         print(f"  ✅ {name} さんを新規登録しました")
 
 
